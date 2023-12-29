@@ -1,0 +1,10 @@
+resolver: lts-22.3
+packages:
+- .
+system-ghc: true
+nix:
+  enable: false
+extra-deps:
+# waiting for release, bump version bounds when released
+- github: jaspervdj/websockets
+  commit: ae2aa5e2e437c22afe80e9a254859c9d180f75bf

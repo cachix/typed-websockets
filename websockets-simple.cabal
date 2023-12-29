@@ -1,0 +1,56 @@
+cabal-version:      3.4
+name:               websockets-simple
+version:            1.0
+synopsis:           Simple websockets server
+-- description:
+homepage:           https://github.com/cachix/websockets-simple
+license:            Apache-2.0
+author:             Domen Kožar
+maintainer:         domen@cachix.org
+-- copyright:
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+-- extra-source-files:
+
+common common
+    ghc-options: -Wall -Wcompat -Wincomplete-record-updates
+                 -Wincomplete-uni-patterns -Wredundant-constraints -fwarn-tabs
+                 -fwarn-unused-imports -fwarn-missing-signatures
+                 -fwarn-name-shadowing -fwarn-incomplete-patterns
+    build-depends: base,
+                   websockets,
+                   unagi-chan,
+                   mtl,
+                   async,
+                   uri-bytestring,
+                   wuss,
+                   unliftio-core,
+                   bytestring,
+                   exceptions
+                   
+    default-extensions: OverloadedStrings
+
+library
+    import:           common
+    exposed-modules:  
+      Network.WebSockets.Simple.Server
+      Network.WebSockets.Simple.Client
+    other-modules:
+      Network.WebSockets.Simple.Session
+      Network.WebSockets.Simple.Utils
+    hs-source-dirs:   src
+    default-language: GHC2021
+
+-- typechecks README during CI but doesn't run it
+executable readme
+  main-is:        README.lhs
+  build-depends:  base, 
+                  markdown-unlit,
+                  websockets,
+                  websockets-simple,
+                  string-conv,
+                  serialise,
+                  text,
+                  async
+  ghc-options:    -pgmL markdown-unlit
+  build-tool-depends: markdown-unlit:markdown-unlit
