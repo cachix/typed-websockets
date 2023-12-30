@@ -18,12 +18,12 @@ common common
                  -fwarn-unused-imports -fwarn-missing-signatures
                  -fwarn-name-shadowing -fwarn-incomplete-patterns
     build-depends: base,
-                   websockets,
+                   websockets >= 0.13.0.0,
                    unagi-chan,
                    mtl,
                    async,
                    uri-bytestring,
-                   wuss,
+                   wuss >= 2.0.1.7,
                    unliftio-core,
                    bytestring,
                    exceptions
