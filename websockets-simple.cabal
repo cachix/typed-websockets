@@ -26,7 +26,8 @@ common common
                    wuss >= 2.0.1.7,
                    unliftio-core,
                    bytestring,
-                   exceptions
+                   exceptions,
+                   stamina
                    
     default-extensions: OverloadedStrings
 

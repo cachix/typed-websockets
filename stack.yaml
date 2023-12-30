@@ -7,3 +7,4 @@ nix:
 extra-deps:
 - wuss-2.0.1.7
 - websockets-0.13.0.0
+- stamina-0.1.0.0
