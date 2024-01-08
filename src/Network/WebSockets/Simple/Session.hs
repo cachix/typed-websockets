@@ -3,6 +3,7 @@ module Network.WebSockets.Simple.Session
     run,
     Session (..),
     SessionProtocol (..),
+    ackProtocol,
   )
 where
 
@@ -13,6 +14,9 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Control.Monad.Reader (MonadReader, ReaderT, asks, runReaderT)
 import Data.ByteString (ByteString, toStrict)
+import Data.HashMap.Strict qualified as HashMap
+import Data.IORef (IORef, newIORef)
+import Data.Time.Clock (UTCTime)
 import Network.WebSockets qualified as WS
 
 -- Allows decoding from ByteString to any format like JSON or CBOR.
@@ -23,7 +27,10 @@ class Codec a where
 -- State for the session
 data SessionEnv = SessionEnv
   { sendChan :: Unagi.InChan ByteString,
-    receiveChan :: Unagi.OutChan ByteString
+    receiveChan :: Unagi.OutChan ByteString,
+    -- TODO: ideally we'd implement a way for each WebsocketMonad instance to specify how env is created
+    -- maybe order by timestamp?
+    ackProtocol :: IORef (Integer, HashMap.HashMap Integer (UTCTime, ByteString))
   }
 
 newtype Session m send receive a = Session (ReaderT SessionEnv m a)
@@ -36,7 +43,7 @@ class (MonadIO m, Codec send, Codec receive) => SessionProtocol m send receive w
   send :: send -> Session m send receive ()
   receive :: Session m send receive receive
 
-instance (MonadIO m, Codec send, Codec receive) => SessionProtocol m send receive where
+instance {-# OVERLAPPABLE #-} (MonadIO m, Codec send, Codec receive) => SessionProtocol m send receive where
   send msg = do
     sendChanWrite <- asks sendChan
     liftIO $ Unagi.writeChan sendChanWrite $ toByteString msg
@@ -50,7 +57,8 @@ run :: (Codec send, Codec receive) => Int -> WS.Connection -> Session IO send re
 run limit conn sendApp receiveApp = do
   (sendChanWrite, sendChanRead) <- liftIO $ Unagi.newChan limit
   (receiveChanWrite, receiveChanRead) <- liftIO $ Unagi.newChan limit
-  let clientEnv = SessionEnv sendChanWrite receiveChanRead
+  ackProtocol <- liftIO $ newIORef (0, HashMap.empty)
+  let clientEnv = SessionEnv sendChanWrite receiveChanRead ackProtocol
 
   -- Use async to queue the send and receive channels in parallel
   sendAsync <- liftIO $ async $ forever $ do
