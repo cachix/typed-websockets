@@ -9,7 +9,7 @@ module Network.WebSockets.Simple.Server
   )
 where
 
-import Control.Exception (throwIO)
+import Control.Exception.Safe (SomeException, handle, throwIO)
 import Control.Monad (when)
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
@@ -22,7 +22,8 @@ import Network.WebSockets.Simple.Utils qualified as Utils
 data Options a = Options
   { handlePendingConnection :: (ClientConnection a) => WS.PendingConnection -> IO (Maybe a),
     pingPongOptions :: WS.PingPongOptions -> IO WS.PingPongOptions,
-    messageLimit :: Int
+    messageLimit :: Int,
+    handleException :: WS.PendingConnection -> SomeException -> IO ()
   }
 
 --
@@ -31,7 +32,8 @@ defaultOptions =
   Options
     { handlePendingConnection = (fmap Just) . WS.acceptRequest,
       pingPongOptions = return,
-      messageLimit = 10000
+      messageLimit = 10000,
+      handleException = \_ _ -> return ()
     }
 
 class ClientConnection a where
@@ -53,7 +55,7 @@ run uriBS options app receiveApp = do
   WS.runServerWithOptions serverOptions (application pingpongOpts)
   where
     application :: PingPong.PingPongOptions -> WS.ServerApp
-    application pingpongOpts pendingConnection = do
+    application pingpongOpts pendingConnection = handle (handleException options pendingConnection) $ do
       maybeClient <- handlePendingConnection options pendingConnection
       for_ maybeClient $ \client -> PingPong.withPingPong pingpongOpts (getConnection client) $ \_ ->
         Session.run (messageLimit options) (getConnection client) (app client) (receiveApp client)
