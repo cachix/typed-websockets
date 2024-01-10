@@ -1,4 +1,4 @@
-module Network.WebSockets.Simple.Client
+module Network.WebSockets.Typed.Client
   ( Options (..),
     defaultOptions,
     run,
@@ -14,8 +14,8 @@ import Data.ByteString.Char8 (unpack)
 import Data.Maybe (isJust)
 import Network.WebSockets qualified as WS
 import Network.WebSockets.Connection.PingPong qualified as PingPong
-import Network.WebSockets.Simple.Session qualified as Session
-import Network.WebSockets.Simple.Utils qualified as Utils
+import Network.WebSockets.Typed.Session qualified as Session
+import Network.WebSockets.Typed.Utils qualified as Utils
 import Stamina qualified
 import Wuss qualified
 

@@ -1,16 +1,16 @@
 cabal-version:      3.4
-name:               websockets-simple
+name:               typed-websockets
 version:            1.0
-synopsis:           Simple websockets server
+synopsis:           Typed websockets server/client
 -- description:
-homepage:           https://github.com/cachix/websockets-simple
+homepage:           https://github.com/cachix/typed-websockets
 license:            Apache-2.0
 author:             Domen Kožar
 maintainer:         domen@cachix.org
--- copyright:
 build-type:         Simple
-extra-doc-files:    CHANGELOG.md
--- extra-source-files:
+extra-doc-files:    
+  README.md
+  CHANGELOG.md
 
 common common
     ghc-options: -Wall -Wcompat -Wincomplete-record-updates
@@ -34,11 +34,11 @@ common common
 library
     import:           common
     exposed-modules:  
-      Network.WebSockets.Simple.Server
-      Network.WebSockets.Simple.Client
+      Network.WebSockets.Typed.Server
+      Network.WebSockets.Typed.Client
     other-modules:
-      Network.WebSockets.Simple.Session
-      Network.WebSockets.Simple.Utils
+      Network.WebSockets.Typed.Session
+      Network.WebSockets.Typed.Utils
     hs-source-dirs:   src
     default-language: GHC2021
 
@@ -48,7 +48,7 @@ executable readme
   build-depends:  base, 
                   markdown-unlit,
                   websockets,
-                  websockets-simple,
+                  typed-websockets,
                   string-conv,
                   serialise,
                   text,

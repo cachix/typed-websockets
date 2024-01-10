@@ -1,4 +1,4 @@
-module Network.WebSockets.Simple.Session
+module Network.WebSockets.Typed.Session
   ( Codec (..),
     run,
     Session (..),

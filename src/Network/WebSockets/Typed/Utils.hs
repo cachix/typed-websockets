@@ -1,4 +1,4 @@
-module Network.WebSockets.Simple.Utils where
+module Network.WebSockets.Typed.Utils where
 
 import Control.Exception (Exception, throwIO)
 import Data.ByteString (ByteString)

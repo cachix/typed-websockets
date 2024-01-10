@@ -1,4 +1,4 @@
-# websockets-simple
+# typed-websockets
 
 High-level interface for websockets.
 
@@ -19,8 +19,8 @@ High-level interface for websockets.
 ```haskell
 {-# LANGUAGE DeriveAnyClass, DeriveGeneric, OverloadedStrings #-}
 module Main where
-import qualified Network.WebSockets.Simple.Client as WClient
-import qualified Network.WebSockets.Simple.Server as WServer
+import qualified Network.WebSockets.Typed.Client as WClient
+import qualified Network.WebSockets.Typed.Server as WServer
 import qualified Network.WebSockets as WS
 -- using cbor as an example, aeson would work too
 import qualified Codec.Serialise as Serialise

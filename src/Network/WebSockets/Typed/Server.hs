@@ -1,4 +1,4 @@
-module Network.WebSockets.Simple.Server
+module Network.WebSockets.Typed.Server
   ( Options (..),
     defaultOptions,
     run,
@@ -16,8 +16,8 @@ import Data.ByteString.Char8 (unpack)
 import Data.Foldable (for_)
 import Network.WebSockets qualified as WS
 import Network.WebSockets.Connection.PingPong qualified as PingPong
-import Network.WebSockets.Simple.Session qualified as Session
-import Network.WebSockets.Simple.Utils qualified as Utils
+import Network.WebSockets.Typed.Session qualified as Session
+import Network.WebSockets.Typed.Utils qualified as Utils
 
 data Options a = Options
   { handlePendingConnection :: (ClientConnection a) => WS.PendingConnection -> IO (Maybe a),
