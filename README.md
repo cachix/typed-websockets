@@ -1,5 +1,8 @@
 # typed-websockets
 
+
+[![Hackage](https://img.shields.io/hackage/v/typed-websockets.svg?style=flat)](https://hackage.haskell.org/package/typed-websockets) ![CI status](https://github.com/cachix/typed-websockets/actions/workflows/ci.yml/badge.svg)
+
 High-level interface for websockets.
 
 ## Features 
