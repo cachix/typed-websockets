@@ -31,7 +31,11 @@ defaultOptions =
   Options
     { headers = [],
       messageLimit = 10000,
-      staminaSettings = Stamina.defaults,
+      staminaSettings =
+        Stamina.defaults
+          { Stamina.maxTime = Nothing,
+            Stamina.maxAttempts = Nothing
+          },
       staminaRetry = const $ return ()
     }
 

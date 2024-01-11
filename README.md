@@ -12,7 +12,7 @@ High-level interface for websockets.
 - Uses channels for sending/receiving messages
 - URI based API supporting `ws://` and `wss://` (for the client)
 - Simple interface between client and server send/receive types
-- Retries connection for the client automatically using [Stamina](https://github.com/cachix/stamina.hs)
+- Retries connection indefinitely for the client automatically using [Stamina](https://github.com/cachix/stamina.hs)
 - TODO: graceful shutdown
 
 ## Example
