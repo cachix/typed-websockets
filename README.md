@@ -5,7 +5,7 @@
 
 High-level interface for websockets.
 
-## Features 
+## Features
 
 - Splits up receiving and sending into separate threads
 - Wires up Ping/Pong for Client and Server
@@ -13,7 +13,7 @@ High-level interface for websockets.
 - URI based API supporting `ws://` and `wss://` (for the client)
 - Simple interface between client and server send/receive types
 - Retries connection indefinitely for the client automatically using [Stamina](https://github.com/cachix/stamina.hs)
-- TODO: graceful shutdown
+- Handles graceful shutdown for the client
 
 ## Example
 

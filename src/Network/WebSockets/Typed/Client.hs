@@ -8,6 +8,7 @@ module Network.WebSockets.Typed.Client
   )
 where
 
+import Control.Exception (finally)
 import Control.Monad (when)
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
@@ -23,7 +24,8 @@ data Options = Options
   { headers :: WS.Headers,
     messageLimit :: Int,
     staminaSettings :: Stamina.RetrySettings,
-    staminaRetry :: Stamina.RetryStatus -> IO ()
+    staminaRetry :: Stamina.RetryStatus -> IO (),
+    onShutdown :: WS.Connection -> IO ()
   }
 
 defaultOptions :: Options
@@ -36,7 +38,11 @@ defaultOptions =
           { Stamina.maxTime = Nothing,
             Stamina.maxAttempts = Nothing
           },
-      staminaRetry = const $ return ()
+      staminaRetry = const $ return (),
+      onShutdown = \connection ->
+        -- TODO: drain the message queues
+        -- TODO: if there was an exception related to socket, we need to handle it?
+        WS.sendClose connection ("Bye!" :: ByteString)
     }
 
 run :: (Session.Codec send, Session.Codec receive) => ByteString -> Options -> Session.Session IO send receive () -> (receive -> Session.Session IO send receive ()) -> IO ()
@@ -55,4 +61,8 @@ run uriBS options app receiveApp = do
     go :: Stamina.RetryStatus -> WS.ClientApp ()
     go retryStatus connection = do
       Stamina.resetInitial retryStatus
-      PingPong.withPingPong WS.defaultPingPongOptions connection (\conn -> Session.run (messageLimit options) conn app receiveApp)
+      PingPong.withPingPong
+        WS.defaultPingPongOptions
+        connection
+        $ const
+        $ Session.run (messageLimit options) connection app receiveApp `finally` onShutdown options connection
