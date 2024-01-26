@@ -8,11 +8,11 @@ module Network.WebSockets.Typed.Client
   )
 where
 
-import Control.Exception (finally)
+import Control.Exception (Exception (fromException), SomeException, finally)
 import Control.Monad (when)
-import Data.Foldable (for_)
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
+import Data.Foldable (for_)
 import Data.Maybe (isJust)
 import Network.WebSockets qualified as WS
 import Network.WebSockets.Connection.PingPong qualified as PingPong
@@ -51,7 +51,7 @@ defaultOptions =
 run :: (Session.Codec send, Session.Codec receive) => ByteString -> Options -> Session.Session IO send receive () -> (receive -> Session.Session IO send receive ()) -> IO ()
 run uriBS options app receiveApp = do
   (isSecure, host, port, path) <- Utils.parseURI uriBS
-  Stamina.retry (staminaSettings options) $ \retryStatus -> do
+  Stamina.retryFor (staminaSettings options) handler $ \retryStatus -> do
     when (isJust $ Stamina.lastException retryStatus) $
       onStaminaRetry options retryStatus
     if isSecure
@@ -60,6 +60,12 @@ run uriBS options app receiveApp = do
   where
     connectionOptions :: WS.ConnectionOptions
     connectionOptions = WS.defaultConnectionOptions
+
+    handler :: SomeException -> IO Stamina.RetryAction
+    handler exc = case fromException exc of
+      -- we don't want to retry on close requests
+      Just WS.CloseRequest {} -> pure Stamina.RaiseException
+      _ -> pure Stamina.Retry
 
     go :: Stamina.RetryStatus -> WS.ClientApp ()
     go retryStatus connection = do
