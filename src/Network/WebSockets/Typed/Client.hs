@@ -10,6 +10,7 @@ where
 
 import Control.Exception (finally)
 import Control.Monad (when)
+import Data.Foldable (for_)
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
 import Data.Maybe (isJust)
@@ -38,7 +39,9 @@ defaultOptions =
           { Stamina.maxTime = Nothing,
             Stamina.maxAttempts = Nothing
           },
-      onStaminaRetry = const $ return (),
+      onStaminaRetry = \retryStatus -> do
+        for_ (Stamina.lastException retryStatus) $ \exc ->
+          putStrLn $ "Retrying websocket connection after exception: " <> show exc,
       onShutdown = \connection ->
         -- TODO: drain the message queues
         -- TODO: if there was an exception related to socket, we need to handle it?

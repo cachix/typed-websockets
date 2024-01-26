@@ -18,11 +18,13 @@ import Network.WebSockets qualified as WS
 import Network.WebSockets.Connection.PingPong qualified as PingPong
 import Network.WebSockets.Typed.Session qualified as Session
 import Network.WebSockets.Typed.Utils qualified as Utils
+import Control.Monad.RWS (MonadState(put))
 
 data Options a = Options
   { handlePendingConnection :: (ClientConnection a) => WS.PendingConnection -> IO (Maybe a),
     pingPongOptions :: WS.PingPongOptions -> IO WS.PingPongOptions,
     messageLimit :: Int,
+    -- handler for sync exceptions, not raised for ConnectionClosed
     onHandleException :: WS.PendingConnection -> SomeException -> IO ()
   }
 
@@ -30,10 +32,11 @@ data Options a = Options
 defaultOptions :: Options WS.Connection
 defaultOptions =
   Options
-    { handlePendingConnection = (fmap Just) . WS.acceptRequest,
+    { handlePendingConnection = fmap Just . WS.acceptRequest,
       pingPongOptions = return,
       messageLimit = 10000,
-      onHandleException = \_ _ -> return ()
+      onHandleException = \_ exc -> do 
+        putStrLn $ "Exception in websocket server: " <> show exc
     }
 
 class ClientConnection a where
