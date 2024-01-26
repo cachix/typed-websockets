@@ -23,7 +23,7 @@ data Options a = Options
   { handlePendingConnection :: (ClientConnection a) => WS.PendingConnection -> IO (Maybe a),
     pingPongOptions :: WS.PingPongOptions -> IO WS.PingPongOptions,
     messageLimit :: Int,
-    handleException :: WS.PendingConnection -> SomeException -> IO ()
+    onHandleException :: WS.PendingConnection -> SomeException -> IO ()
   }
 
 --
@@ -33,7 +33,7 @@ defaultOptions =
     { handlePendingConnection = (fmap Just) . WS.acceptRequest,
       pingPongOptions = return,
       messageLimit = 10000,
-      handleException = \_ _ -> return ()
+      onHandleException = \_ _ -> return ()
     }
 
 class ClientConnection a where
@@ -55,7 +55,7 @@ run uriBS options app receiveApp = do
   WS.runServerWithOptions serverOptions (application pingpongOpts)
   where
     application :: PingPong.PingPongOptions -> WS.ServerApp
-    application pingpongOpts pendingConnection = handle (handleException options pendingConnection) $ do
+    application pingpongOpts pendingConnection = handle (onHandleException options pendingConnection) $ do
       maybeClient <- handlePendingConnection options pendingConnection
       for_ maybeClient $ \client -> PingPong.withPingPong pingpongOpts (getConnection client) $ \_ ->
         Session.run (messageLimit options) (getConnection client) (app client) (receiveApp client)

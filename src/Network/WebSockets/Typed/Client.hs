@@ -24,7 +24,7 @@ data Options = Options
   { headers :: WS.Headers,
     messageLimit :: Int,
     staminaSettings :: Stamina.RetrySettings,
-    staminaRetry :: Stamina.RetryStatus -> IO (),
+    onStaminaRetry :: Stamina.RetryStatus -> IO (),
     onShutdown :: WS.Connection -> IO ()
   }
 
@@ -38,7 +38,7 @@ defaultOptions =
           { Stamina.maxTime = Nothing,
             Stamina.maxAttempts = Nothing
           },
-      staminaRetry = const $ return (),
+      onStaminaRetry = const $ return (),
       onShutdown = \connection ->
         -- TODO: drain the message queues
         -- TODO: if there was an exception related to socket, we need to handle it?
@@ -50,7 +50,7 @@ run uriBS options app receiveApp = do
   (isSecure, host, port, path) <- Utils.parseURI uriBS
   Stamina.retry (staminaSettings options) $ \retryStatus -> do
     when (isJust $ Stamina.lastException retryStatus) $
-      staminaRetry options retryStatus
+      onStaminaRetry options retryStatus
     if isSecure
       then Wuss.runSecureClientWith (unpack host) (fromIntegral port) (unpack path) connectionOptions (headers options) (go retryStatus)
       else WS.runClientWith (unpack host) (fromIntegral port) (unpack path) connectionOptions (headers options) (go retryStatus)
