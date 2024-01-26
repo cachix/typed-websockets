@@ -15,6 +15,7 @@ import Control.Monad.RWS (MonadState (put))
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
 import Data.Foldable (for_)
+import Data.Maybe (isNothing)
 import Network.WebSockets qualified as WS
 import Network.WebSockets.Connection.PingPong qualified as PingPong
 import Network.WebSockets.Typed.Session qualified as Session
@@ -24,7 +25,7 @@ data Options a = Options
   { handlePendingConnection :: (ClientConnection a) => WS.PendingConnection -> IO (Maybe a),
     pingPongOptions :: WS.PingPongOptions -> IO WS.PingPongOptions,
     messageLimit :: Int,
-    -- handler for sync exceptions, not raised for ConnectionClosed
+    -- handler for sync exceptions, ignoring WS.ConnectionException
     onHandleException :: WS.PendingConnection -> SomeException -> IO ()
   }
 
@@ -65,5 +66,5 @@ run uriBS options app receiveApp = do
 
     handler :: WS.PendingConnection -> SomeException -> IO ()
     handler pendingConnection exc = do
-      when (fromException exc /= Just WS.ConnectionClosed) $
+      when (isNothing $ fromException @WS.ConnectionException exc) $
         onHandleException options pendingConnection exc
