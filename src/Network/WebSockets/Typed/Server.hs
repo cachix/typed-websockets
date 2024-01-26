@@ -9,8 +9,9 @@ module Network.WebSockets.Typed.Server
   )
 where
 
-import Control.Exception.Safe (SomeException, handle, throwIO)
+import Control.Exception.Safe (SomeException, fromException, handle, throwIO)
 import Control.Monad (when)
+import Control.Monad.RWS (MonadState (put))
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
 import Data.Foldable (for_)
@@ -18,7 +19,6 @@ import Network.WebSockets qualified as WS
 import Network.WebSockets.Connection.PingPong qualified as PingPong
 import Network.WebSockets.Typed.Session qualified as Session
 import Network.WebSockets.Typed.Utils qualified as Utils
-import Control.Monad.RWS (MonadState(put))
 
 data Options a = Options
   { handlePendingConnection :: (ClientConnection a) => WS.PendingConnection -> IO (Maybe a),
@@ -35,7 +35,7 @@ defaultOptions =
     { handlePendingConnection = fmap Just . WS.acceptRequest,
       pingPongOptions = return,
       messageLimit = 10000,
-      onHandleException = \_ exc -> do 
+      onHandleException = \_ exc -> do
         putStrLn $ "Exception in websocket server: " <> show exc
     }
 
@@ -58,9 +58,12 @@ run uriBS options app receiveApp = do
   WS.runServerWithOptions serverOptions (application pingpongOpts)
   where
     application :: PingPong.PingPongOptions -> WS.ServerApp
-    application pingpongOpts pendingConnection = handle (onHandleException options pendingConnection) $ do
+    application pingpongOpts pendingConnection = handle (handler pendingConnection) $ do
       maybeClient <- handlePendingConnection options pendingConnection
       for_ maybeClient $ \client -> PingPong.withPingPong pingpongOpts (getConnection client) $ \_ ->
         Session.run (messageLimit options) (getConnection client) (app client) (receiveApp client)
 
--- TODO: shutdown ::
+    handler :: WS.PendingConnection -> SomeException -> IO ()
+    handler pendingConnection exc = do
+      when (fromException exc /= Just WS.ConnectionClosed) $
+        onHandleException options pendingConnection exc
